@@ -1,0 +1,78 @@
+{
+    "project": "respeaker v2",
+    "console":{
+         "device": "OLED",
+         "bus": 1,
+         "file": "olod"
+    },
+    "RAM": {
+        "size": "1Gb",
+        "file": "olod"
+    },
+    "EMMC": {
+        "size": "4Gb",
+        "file": "olod"
+    },
+    "ETH": {
+        "ping_address": "192.168.1.1",
+        "file": "olod"
+    },
+    "USB": [
+        {
+            "name": "HOST1",
+            "device":"U",
+            "path": "/dev/sda",
+            "file": "olod"
+        },
+        {
+            "name": "HOST2",
+            "device":"S",
+            "path": "/dev/ttyUSB0",
+            "file": "olod"
+        },
+        {
+            "name": "OTG",
+            "device":"U",
+            "path": "/dev/sdb",
+            "file" : "aa",
+            "file": "olod"
+        }
+    ],
+   "HDMI":{
+       "show": "RGB",
+       "file": "olod"
+   },
+   "I2C": [
+      {
+      "address": "0x34",
+      "file": "olod"
+      },
+      {
+      "status": "disabled",
+      "address": "0x35",
+      "file": "olod"
+      }
+   ],
+   "GPIO":[
+       {
+            "io_num": 49,
+            "direction" :"input",
+            "value": 1    ,
+            "file": "olod"
+       },
+       {
+            "io_num": 48,
+            "direction" :"output",
+            "value": 1  ,
+            "file": "olod"
+       }
+    ],
+   "WIFI": {
+       "status":"okay",
+       "file": "olod"
+   },
+   "BLUETOOTH":{
+       "thread": "okay",
+       "file": "olod"
+   }
+}

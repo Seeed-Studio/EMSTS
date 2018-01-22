@@ -9,3 +9,19 @@
 - GPIO
 - I2C
 - AUDIO ？
+
+main简单化
+多线程问题
+### main
+    - 多线程项目测试
+    - 流水项目测试
+    - 所有项目测试后结束
+### core
+    - 读取config
+    - import file
+    
+### module
+    - 平台检查(general,specific)
+    - status检查
+    - 参数检查
+    - 开始测试，返回结果
