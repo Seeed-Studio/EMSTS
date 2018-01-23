@@ -1,10 +1,9 @@
-import json
+from kernel import core
 
 if __name__ == "__main__":
-    json_file = open("config.json",'r')
-    json_data = json.load(json_file)
-    print json_data
-    #for a in b:
-    #   is enable
-    #       restult = do_test
-    #       console.log(name status restult)
+    interfaces = core.mainjob
+    jobs = interfaces.getjobs()
+
+    for j in jobs:
+        result = j.do_test()
+        print(j.description+" "+result)
