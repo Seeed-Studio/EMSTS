@@ -1,9 +1,30 @@
 {
 
     "project": "respeaker v2",
+    "console":{
+        "description": "log output",
+        "device": "OLED",
+        "bus": 1,
+        "file": "print_console"
+    },    
     "ddr": {
         "description": "ddr test",
         "size": "1Gb",
-        "file": "general_ddr"
-    }
+        "file": "general_ddr",
+        "status": "okay",
+        "thread": "okay"
+    },
+    "emmc": {
+        "description": "ddr test",
+        "size": "4Gb",
+        "file": "general_emmc",
+        "status": "okay"
+    },
+    "eth": {
+        "description": "ddr test",
+        "ping_address": "192.168.1.1",
+        "file": "general_eth",
+        "thread": "okay",
+        "status": "okay"
+    }     
 }

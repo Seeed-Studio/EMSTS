@@ -21,7 +21,7 @@ main简单化
     - import file
     
 ### module
-    - 平台检查(general,specific)
+    - 平台检查(general,specific)!!
     - status检查
     - 参数检查
     - 开始测试，返回结果

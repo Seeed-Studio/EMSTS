@@ -9,4 +9,4 @@ class subcore(core.interface):
         self.t_ddr = importlib.import_module("modules.ddr."+parameters["file"])
         self.t_ddr.init(parameters,platform)
     def do_test(self):
-        self.t_ddr.do_test() 
+        return self.t_ddr.do_test() 

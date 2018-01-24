@@ -6,10 +6,9 @@ class interface:
     __metaclass__ = ABCMeta
 
     def __init__(self, parameters):
-        #self.is_enable = parameters.get("status")
-        #self.is_thread = parameters.get("thread")
-        print('------------')
-        print(parameters)
+        self.is_enable = parameters.get("status")
+        self.is_thread = parameters.get("thread")
+
         
     def do_test(self):
         pass
@@ -23,6 +22,11 @@ class mainjob:
         
     def getjobs(self):
         for j in self.json_data:
-            if j != "project":
-                self.interfaces.append(importlib.import_module("modules."+j+"."+j).subcore(self.json_data[j],self.json_data["project"]))
+            if j != "project" and j != "console":
+                if self.json_data[j]["status"] == "okay":
+                    self.interfaces.append(importlib.import_module("modules."+j+"."+j).subcore(self.json_data[j],self.json_data["project"]))
         return self.interfaces
+    def getconsole(self):
+        console =  importlib.import_module("modules.console."+self.json_data["console"]["file"])
+        console.init(self.json_data["console"],self.json_data["project"])
+        return console
