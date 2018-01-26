@@ -20,26 +20,3 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import time
-from kernel import core
-
-class subcore(core.interface):
-    def __init__(self,parameters,platform,debug):
-        super(subcore,self).__init__(parameters)
-        self.parameters = parameters
-        self.platform = platform
-        self.debug = debug
-        self.ret = {
-            "description": self.parameters["description"],
-            "result": "failed"
-        }
-    def do_test(self):
-        nr_sectors = open('/sys/block/'+self.parameters["location"]+'/size').read().rstrip('\n')
-        sect_size = open('/sys/block/'+self.parameters["location"]+'/queue/hw_sector_size').read().rstrip('\n')
-        real_size =  float(nr_sectors)*float(sect_size)/(1024.0*1024.0*1024.0)
-
-        if self.parameters["size"] - self.parameters["bias"] < real_size  \
-        and self.parameters["size"] + self.parameters["bias"] > real_size:
-            self.ret["result"] = "ok"
-
-        return self.ret

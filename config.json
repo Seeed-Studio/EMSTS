@@ -5,26 +5,44 @@
         "description": "log output",
         "device": "OLED",
         "bus": 1,
-        "file": "print_console"
+        "file": "oled_console"
     },    
     "ddr": {
-        "description": "ddr test",
-        "size": "1Gb",
+        "description": "ddr",
+        "size": 1024,
+        "bias": 30,
         "file": "general_ddr",
-        "status": "okay",
-        "thread": "okay"
+        "status": "okay"
     },
     "emmc": {
-        "description": "ddr test",
-        "size": "4Gb",
+        "description": "emmc",
+        "size": 4.0,
+        "bias": 0.5,
+        "location":"mmcblk0",
         "file": "general_emmc",
         "status": "okay"
     },
     "eth": {
-        "description": "ddr test",
-        "ping_address": "192.168.1.1",
+        "description": "ethernet",
+        "device": "eth0",
+        "ping_address": "192.168.199.1",
         "file": "general_eth",
-        "thread": "okay",
         "status": "okay"
-    }     
+    },   
+    "usb": {
+        "description": "usb",
+        "status": "okay",
+        "file": "general_usb",
+        "devices":[
+            {
+                "id":"1516:1226"
+            },
+            {
+                "id":"1516:1226"
+            },
+            {
+                "id":"1516:1226"
+            }
+        ]
+   }  
 }
