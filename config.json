@@ -38,11 +38,14 @@
                 "id":"1516:1226"
             },
             {
-                "id":"1516:1226"
-            },
-            {
-                "id":"1516:1226"
+                "id":"1a86:7523"
             }
         ]
+   },
+   "wifi": {
+        "description": "wifi",
+        "status": "okay",
+        "file": "general_wifi",
+        "device": "wlan0"
    }  
 }

@@ -28,17 +28,10 @@ class subcore(core.interface):
         super(subcore,self).__init__(parameters)
         self.parameters = parameters
         self.platform = platform
-        self.debug = debug
-        os.popen("ifconfig "+self.parameters["device"]+" up")
-        os.popen("dhclient "+self.parameters["device"])
+        self.debug  = debug
         self.ret = {
             "description": self.parameters["description"],
-            "result": "ok"
+            "result": "failed"
         }
     def do_test(self):
-        for line in os.popen("ping -l 16 -c 3 -I "+self.parameters["device"]+" "+self.parameters["ping_address"]):
-            a = line.find('%')
-            if a != -1:
-                if line[a - 3:a] != ', 0':
-                    self.ret["result"] = 'failed'
         return self.ret

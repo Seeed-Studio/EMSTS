@@ -31,7 +31,16 @@ class subcore(core.interface):
         self.debug  = debug
         self.ret = {
             "description": self.parameters["description"],
-            "result": "failed"
+            "result": "ok"
         }
     def do_test(self):
+        usbs =  os.popen("lsusb  | awk '{print $6}' ").readlines()
+        for ii in self.parameters["devices"]:
+            is_ii = ii["id"]
+            for ll in usbs:
+                if ii["id"] == ll[:-1]:
+                    is_ii = "ok"
+            if is_ii != "ok":
+                self.ret["result"] = is_ii
+                break
         return self.ret
