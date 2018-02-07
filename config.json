@@ -47,5 +47,18 @@
         "status": "okay",
         "file": "general_wifi",
         "device": "wlan0"
-   }  
+   },  
+   "hdmi": {
+    "description": "hdmi",
+    "status": "okay",
+    "thread": "okay",
+    "key": 2,
+    "file": "general_hdmi"        
+    },   
+   "example": {
+        "description": "example",
+        "status": "okay",
+        "thread": "okay",
+        "file": "general_example"        
+   }
 }

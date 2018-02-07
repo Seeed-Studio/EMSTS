@@ -22,23 +22,40 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 from kernel import core
 import threading
+import signal
 
-def do_thread(fun,console):
-    console.log(fun())
+def do_thread(fun,console,e):
+    print("********")
+    ret = fun()
+    console.log(ret)
+    if ret["result"] != "ok":
+        e.set()
+    
+
 
 if __name__ == "__main__":
     interfaces = core.mainjob()
     jobs = interfaces.getjobs()
     console = interfaces.getconsole()
+    e = threading.Event()
+    ts = []
 
 
     for j in jobs:
         if j.is_thread ==  "okay":
-            t =threading.Thread(target=do_thread,args=(j.do_test,console,))
+            t =threading.Thread(target=do_thread,args=(j.do_test,console,e,))
             t.start()
+            ts.append(t)
+
     for i in jobs:
         if i.is_thread !=  "okay":
-            console.log(i.do_test())
+            ret = i.do_test()
+            console.log(ret)
+            print("========")
+            if ret["result"] != "ok" or e.wait(1):
+                for ii in ts:
+                    ii.join()               
+                break
 
     #console.log("%o" % 20)
    
