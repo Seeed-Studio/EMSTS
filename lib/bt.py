@@ -20,17 +20,12 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-# export LIBASOUND_THREAD_SAFE=0
-
 import time
 import pexpect
 import subprocess
 import sys
 import os
 import syslog
-
-
 
 class BluetoothctlError(Exception):
     """This exception is raised, when bluetoothctl fails to start."""
@@ -41,21 +36,18 @@ class Bluetoothctl:
     """A wrapper for bluetoothctl utility."""
 
     def __init__(self):                        
-        f = file("./plog.out", 'w')
+        f = open("./plog.out", 'w')
         subprocess.check_output("hcitool cmd 0x3F 0x01C 0x01 0x02 0x00 0x01 0x01", shell = True)
         # Start to open bluetoothctl
-        self.child = pexpect.spawn("bluetoothctl")
+        self.child = pexpect.spawn("bluetoothctl",encoding='utf-8')
         
-        # TO-DO
-        # If run bluetoothctl and can't get beaglebone MAC address, then reinitialize again
-        
-        self.child.logfile = f                                                   
+        self.child.logfile = f
+                                                   
             
     def __del__(self):
         self.child.sendline("quit")
         # print self.child.before
         self.child
-        print "del function"
         
     def get_output(self, command, pause = 0):
         """Run a command in bluetoothctl prompt, return output as a list of lines."""
@@ -74,7 +66,7 @@ class Bluetoothctl:
         """Try to connect to a device by mac address."""
         try:
             out = self.get_output("connect " + mac_address, 2)
-        except BluetoothctlError, e:
+        except BluetoothctlError as e:
             print(e)
             return None
         else:
@@ -84,17 +76,16 @@ class Bluetoothctl:
 
 
 
-    def run_test(self,dist_mac_addr = "0C:A6:94:FB:16:38"):
+    def run_bluealsa_test(self,dist_mac_addr = "0C:A6:94:FB:16:38"):
         count =4
         status = 'error'   
         while count > 0 :
-            print "connect to[1] : " + dist_mac_addr    
             self.child.sendline("connect " + dist_mac_addr)
             time.sleep(1)
             results = self.child.expect(["Connection successful", "Fail", "org.bluez.Error.Failed", pexpect.EOF,pexpect.TIMEOUT], timeout=10)
-            print "connect speaker result: ",results
+            #print "connect speaker result: ",results
             if 0 < results:
-                print "test whether connect ok?"
+                #print "test whether connect ok?"
                 time.sleep(4)
                 self.child.sendline("info " + dist_mac_addr)
                 time.sleep(1)
@@ -115,12 +106,14 @@ class Bluetoothctl:
         status = 'ok'
         time.sleep(1.5)                    
         return status
-
-
-   
+    def run_scan_test(self):
+        self.child.sendline("scan on")
+        time.sleep(1)
+        results = self.child.expect(["[NEW]", pexpect.EOF,pexpect.TIMEOUT], timeout=10)
+        #print("scan on result: "+str(results) ) 
+        return results  
 
 if __name__ == "__main__":
     bl = Bluetoothctl()
-    result = bl.run_test()
-    print "bluetooth test result: ", result
-  
+    result = bl.run_bluealsa_test()
+    #print("bluetooth test result: "+str(result))

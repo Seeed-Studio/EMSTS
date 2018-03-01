@@ -36,7 +36,7 @@ class subcore(core.interface):
         self.debug  = debug
         self.ret = {
             "description": self.parameters["description"],
-            "result": "ok"
+            "result": "watch"
         }
     def do_test(self):
         #Set up pygame
@@ -93,7 +93,7 @@ class subcore(core.interface):
         #         if event.type == QUIT:
         #             pygame.quit()
         #             sys.exit()
-        time.sleep(5)
+        time.sleep(10)
         pygame.quit()
 
         return self.ret

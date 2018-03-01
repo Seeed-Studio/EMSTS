@@ -23,6 +23,7 @@
 from kernel import core
 import time
 import os
+import serial
 class subcore(core.interface):
     def __init__(self,parameters,platform,debug):
         super(subcore,self).__init__(parameters)
@@ -33,6 +34,19 @@ class subcore(core.interface):
             "description": self.parameters["description"],
             "result": "failed"
         }
+        self.uart = serial.Serial(port = "/dev/"+self.parameters["device"], baudrate=115200, timeout=5)
+        self.uart.flush()
     def do_test(self):
-        time.sleep(10)
+        self.uart.write('\n'.encode())
+        while 0 == self.uart.readable():
+            pass
+        while True:
+            self.uart.readline()
+            out = self.uart.readline()
+            #print(out.decode())
+            if "Debian" in out.decode() or "root" in out.decode():
+                self.ret["result"] = "ok"
+                return self.ret
         return self.ret
+
+

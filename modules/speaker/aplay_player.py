@@ -23,6 +23,14 @@
 from kernel import core
 import time
 import os
+import threading
+from lib import recorder
+import numpy as np
+import audioop
+def play_music(p):
+    os.popen(" aplay -D " +p["device"] +" /opt/music/"+p["music"])
+
+
 class subcore(core.interface):
     def __init__(self,parameters,platform,debug):
         super(subcore,self).__init__(parameters)
@@ -34,5 +42,29 @@ class subcore(core.interface):
             "result": "ok"
         }
     def do_test(self):
-        time.sleep(9)
+        t =threading.Thread(target=play_music,args=(self.parameters,))
+        t.start()
+        counter = 0
+        if self.parameters["option"] == "with_record":
+            time.sleep(3)
+            
+            with recorder.recorder(16000, 8, 16000 / 16)  as mic:
+                for chunk in mic.read_chunks():
+                    for i in range(2):
+                        data = np.fromstring(chunk, dtype='int16')
+                        data = data[6+i::8].tostring()
+                        rms = audioop.rms(data, 2)
+                        rms_db = 20 * np.log10(rms)
+                        print('channel: {} RMS: {} dB'.format(6+i,rms_db))
+                        if i == 0:
+                            if self.parameters["ch7"] - self.parameters["bias"] > rms_db  \
+                            and self.parameters["ch7"] + self.parameters["bias"] < rms_db:
+                                self.ret["result"] = "failed"  
+                        if i == 1:
+                            if self.parameters["ch8"] - self.parameters["bias"] > rms_db  \
+                            and self.parameters["ch8"] + self.parameters["bias"] < rms_db:
+                                self.ret["result"] = "failed"                                                                
+                    if counter == 10:
+                        break
+                    counter = counter + 1        
         return self.ret

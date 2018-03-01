@@ -20,9 +20,18 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-from kernel import core
+
+# export LIBASOUND_THREAD_SAFE=0
+
 import time
+import pexpect
+import subprocess
+import sys
 import os
+import syslog
+from kernel import core
+from lib import bt
+
 class subcore(core.interface):
     def __init__(self,parameters,platform,debug):
         super(subcore,self).__init__(parameters)
@@ -33,5 +42,15 @@ class subcore(core.interface):
             "description": self.parameters["description"],
             "result": "failed"
         }
+        self.bt = bt.Bluetoothctl()
     def do_test(self):
+        if self.parameters["mathed"] == "scan":
+            if self.bt.run_scan_test() == 0:
+                self.ret["result"] = "ok"
         return self.ret
+
+
+
+
+   
+  

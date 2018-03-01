@@ -23,6 +23,8 @@
 from kernel import core
 import time
 import os
+from upm import pyupm_adc121c021 as upmAdc121c021
+
 class subcore(core.interface):
     def __init__(self,parameters,platform,debug):
         super(subcore,self).__init__(parameters)
@@ -33,6 +35,18 @@ class subcore(core.interface):
             "description": self.parameters["description"],
             "result": "ok"
         }
+        self.myAnalogDigitalConv = upmAdc121c021.ADC121C021(self.parameters["busID"], 0x50)
+
     def do_test(self):
-        time.sleep(9)
+        for a in range(10):
+            val = self.myAnalogDigitalConv.value()
+            voltsVal = self.myAnalogDigitalConv.valueToVolts(val)
+            if self.parameters["volts"] - self.parameters["bias"] > voltsVal  \
+            and self.parameters["volts"] + self.parameters["bias"] < voltsVal:
+                self.ret["result"] = "failed"
+            #print("ADC value: %s Volts = %s" % (val, voltsVal))
+            time.sleep(.05)
+
         return self.ret
+
+

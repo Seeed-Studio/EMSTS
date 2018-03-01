@@ -41,6 +41,7 @@ class subcore(core.interface):
             if line.split(':')[0] == "MemTotal":
                 real_size = int(line.split(':')[1].strip()[:-3])
 
+        real_size = int(real_size / 1024)
         if self.parameters["size"] - self.parameters["bias"] < real_size  \
         and self.parameters["size"] + self.parameters["bias"] > real_size:
             self.ret["result"] = "ok"

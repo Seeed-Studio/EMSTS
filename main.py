@@ -24,23 +24,24 @@ from kernel import core
 import threading
 import signal
 
+console_lock = threading.Lock()
+
 def do_thread(fun,console,e):
-    print("********")
     ret = fun()
-    console.log(ret)
-    if ret["result"] != "ok":
+    if console_lock.acquire():
+        console.log(ret)
+        console_lock.release() 
+    if ret["result"] != "ok" and ret["result"] != "listen" and  ret["result"] != "watch": 
+        print("====>%d" % len(ret["result"]))
+        print("====>" + ret["result"])
         e.set()
     
-
-
 if __name__ == "__main__":
     interfaces = core.mainjob()
     jobs = interfaces.getjobs()
     console = interfaces.getconsole()
     e = threading.Event()
     ts = []
-
-
     for j in jobs:
         if j.is_thread ==  "okay":
             t =threading.Thread(target=do_thread,args=(j.do_test,console,e,))
@@ -50,10 +51,14 @@ if __name__ == "__main__":
     for i in jobs:
         if i.is_thread !=  "okay":
             ret = i.do_test()
-            console.log(ret)
-            print("========")
-            if ret["result"] != "ok" or e.wait(1):
+            if console_lock.acquire():
+                console.log(ret)
+                console_lock.release() 
+            if ret["result"] != "ok" and \
+               ret["result"] != "listen" and \
+               ret["result"] != "watch" and e.wait(1):
                 for ii in ts:
+                    print("xxxx")
                     ii.join()               
                 break
 
