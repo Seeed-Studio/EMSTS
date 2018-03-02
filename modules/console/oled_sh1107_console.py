@@ -260,13 +260,12 @@ class console:
             self.oled_putString(a["description"]+":")  
             if a["result"] == "ok":
                 self.oled_setTextXY(self.line,10)
-                self.oled_putString(a["result"])
-            if a["result"] == "failed" and a["result"] == "listen":
+            if else a["result"] == "failed" and a["result"] == "listen":
                 self.oled_setTextXY(self.line,5)
-                self.oled_putString(a["result"])
-            if a["result"] == "watch":
+            else a["result"] == "watch":
                 self.oled_setTextXY(self.line,7)
-                self.oled_putString(a["result"])                              
+
+            self.oled_putString(a["result"])                              
 
         self.line = self.line+1
         if self.line == 12 :
