@@ -32,10 +32,15 @@ class console:
         self.oled = upmLCD.SSD1308(0, 0x3C)
         self.oled.clear()
         self.y  = 0
+        self.t = True
 
     def log(self,*args):
         self.oled.setCursor(self.y, 0)
         for a in args:
+            #只要有一项测试出错，测试失败
+            if a["result"] != "ok" and a["result"] != "listen" and  a["result"] != "watch": 
+                if self.t == True:
+                    self.t = False
             print(a)
             self.oled.write(a["description"]+": "+a["result"])
         self.y = self.y+1
@@ -45,3 +50,8 @@ class console:
     def debug(self,*args):
         for a in args:
             print("debug: "+a)         
+    def finish(self):
+        if t:
+            print("test succeed")
+        else:
+            print("test failed")

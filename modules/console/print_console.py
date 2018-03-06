@@ -22,11 +22,20 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 class console:
     def __init__(self,parameters,platform):
-        pass
-
+        self.t = True
+     
     def log(self,*args):
         for a in args:
+            #只要有一项测试出错，测试失败
+            if a["result"] != "ok" and a["result"] != "listen" and  a["result"] != "watch": 
+                if self.t == True:
+                    self.t = False
             print(a)
     def debug(self,*args):
         for a in args:
             print(a)     
+    def finish(self):
+        if self.t:
+            print("test succeed")
+        else:
+            print("test failed")

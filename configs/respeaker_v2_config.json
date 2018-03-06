@@ -2,9 +2,8 @@
     "project": "respeaker v2",
     "console":{
         "description": "log output",
-        "device": "OLED",
-        "bus": 1,
-        "file": "oled_sh1107_console"
+        "device": "SCREEN",
+        "file": "screen_console"
     },  
     "adc":{
         "description": "adc",
@@ -59,10 +58,10 @@
                 "id":"10c4:ea60"
             },
             {
-                "id":"1d6b:0002"
+                "id":"0403:6001"
             },
             {
-                "id":"0bda:0316"
+                "id":"0bda:8152"
             }
         ]
    },
@@ -70,11 +69,10 @@
     "description": "sp",
     "status": "okay",
     "thread": "okay",
-    "device": "hw:0,1",
-    "music": "c.wav",
-    "option": "with_record",
-    "ch7": 58,
-    "ch8": 76,
+    "device": "plughw:0,1",
+    "music": "white.wav",
+    "ch7": 237,
+    "ch8": 294,
     "bias": 2,
     "file": "aplay_player"        
     },   
@@ -89,14 +87,7 @@
     "status": "okay",
     "file": "general_bluetooth",
     "mathed": "scan"
-    },     
-   "hdmi": {
-    "description": "hdmi",
-    "status": "okay",
-    "thread": "okay",
-    "key": 2,
-    "file": "general_hdmi"        
-    },   
+    },       
    "example": {
         "description": "example",
         "status": "disabled",

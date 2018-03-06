@@ -23,6 +23,8 @@
 from kernel import core
 import threading
 import signal
+import time
+
 
 console_lock = threading.Lock()
 
@@ -32,8 +34,6 @@ def do_thread(fun,console,e):
         console.log(ret)
         console_lock.release() 
     if ret["result"] != "ok" and ret["result"] != "listen" and  ret["result"] != "watch": 
-        print("====>%d" % len(ret["result"]))
-        print("====>" + ret["result"])
         e.set()
     
 if __name__ == "__main__":
@@ -54,13 +54,15 @@ if __name__ == "__main__":
             if console_lock.acquire():
                 console.log(ret)
                 console_lock.release() 
-            if ret["result"] != "ok" and \
-               ret["result"] != "listen" and \
-               ret["result"] != "watch" and e.wait(1):
+            if (ret["result"] != "ok" and ret["result"] != "listen" and ret["result"] != "watch") or e.wait(0.1):
+                print("xxxx")
                 for ii in ts:
-                    print("xxxx")
                     ii.join()               
                 break
 
+
+    console.finish()
+    while True:
+        time.sleep(1)
     #console.log("%o" % 20)
    

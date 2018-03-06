@@ -37,16 +37,21 @@ class subcore(core.interface):
         self.uart = serial.Serial(port = "/dev/"+self.parameters["device"], baudrate=115200, timeout=5)
         self.uart.flush()
     def do_test(self):
-        self.uart.write('\n'.encode())
+        self.uart.write('hello\n'.encode())
         while 0 == self.uart.readable():
             pass
         while True:
-            self.uart.readline()
             out = self.uart.readline()
-            #print(out.decode())
-            if "Debian" in out.decode() or "root" in out.decode():
+            
+            if out.decode() != None:
+                print(out.decode())
                 self.ret["result"] = "ok"
                 return self.ret
+            #out = self.uart.readline()
+            #print(out.decode())
+            # if "Debian" in out.decode() or "root" in out.decode():
+            #     self.ret["result"] = "ok"
+            #     return self.ret
         return self.ret
 
 

@@ -31,6 +31,10 @@ import mraa as m
 
 class console:
     def __init__(self,parameters,platform):    
+        self.parameters = parameters
+        self.platform = platform
+        self.t = True
+
         self.line  = 0
         # initialise I2C
         self.x = m.I2c(0)
@@ -186,7 +190,6 @@ class console:
         blk.append(0x37) # End at  (8 + 47)th column. Each Column has 2 pixels(segments)
         self.multi_comm(blk)
         self.oled_clearDisplay()
-
     def sendCommand(self,byte):
         try:
             self.x.writeReg(self.Command_Mode,byte)
@@ -256,14 +259,18 @@ class console:
     def log(self,*args):
         self.oled_setTextXY(self.line,0)
         for a in args:
+            #只要有一项测试出错，测试失败
+            if a["result"] != "ok" and a["result"] != "listen" and  a["result"] != "watch": 
+                if self.t == True:
+                    self.t = False
             print(a)
             self.oled_putString(a["description"]+":")  
             if a["result"] == "ok":
                 self.oled_setTextXY(self.line,10)
-            if else a["result"] == "failed" and a["result"] == "listen":
-                self.oled_setTextXY(self.line,5)
-            else a["result"] == "watch":
+            elif a["result"] == "watch":
                 self.oled_setTextXY(self.line,7)
+            else:
+                self.oled_setTextXY(self.line,5)
 
             self.oled_putString(a["result"])                              
 
@@ -275,3 +282,8 @@ class console:
         for a in args:
             print("debug: "+a)         
 
+    def finish(self):   
+        if self.t:
+            print("test succeed")
+        else:
+            print("test failed")

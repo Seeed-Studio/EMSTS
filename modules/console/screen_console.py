@@ -20,53 +20,53 @@
 # LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-
-from pixel_ring import pixel_ring
-import mraa
+from lib import display
 import time
-import os
 
 class console:
     def __init__(self,parameters,platform):
-        en = mraa.Gpio(12)
-        if os.geteuid() != 0 :
-            time.sleep(1)
-        
-        en.dir(mraa.DIR_OUT)
-        en.write(0)
-
-        self.leds = pixel_ring.dev
+        self.parameters = parameters
+        self.platform = platform        
         self.t = True
-
+        self.d = display.display()
+        self.d.start()
+        self.data_json = {}           
     def log(self,*args):
         for a in args:
             #只要有一项测试出错，测试失败
             if a["result"] != "ok" and a["result"] != "listen" and  a["result"] != "watch": 
                 if self.t == True:
                     self.t = False
-            print(a)
+
+            self.data_json.clear()
+            self.data_json["type"] = "text"
+            self.data_json["description"] = a["description"]
+            self.data_json["result"] = a["result"]
+            self.d.data.put(self.data_json)
+            time.sleep(0.1)
 
     def debug(self,*args):
         for a in args:
-            print(a)
-            if a == "show":
-                for ii in range(12):
-                    self.leds.set_pixel(ii, 255, 255, 255)   
-                    self.leds.show() 
-                return 
-            counter = 0
-            for ii in a:
-                if ii == "1":
-                    self.leds.set_pixel(counter, 0, 0, 255)
-                else:
-                    self.leds.set_pixel(counter, 255, 0, 0)   
-                self.leds.show()  
-                counter = counter + 1
-
+            print(a)     
     def finish(self):
-        if t:
+
+        if self.platform =="respeaker v2":
+            self.data_json.clear()
+            self.data_json["type"] = "picture"
+            self.data_json["path"] = "/opt/pic/rgb.png"
+            self.data_json["location"] = "right"
+            self.d.data.put(self.data_json)
+            time.sleep(0.1)
+
+            self.data_json["location"] = "left"
+            self.d.data.put(self.data_json)
+            time.sleep(0.1)
+            
+        self.data_json.clear()
+        self.data_json["type"] = "finish"    
+        self.data_json["finish"] = self.t
+        self.d.data.put(self.data_json)
+        if self.t:
             print("test succeed")
         else:
             print("test failed")

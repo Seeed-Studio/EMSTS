@@ -45,7 +45,8 @@ class subcore(core.interface):
         t =threading.Thread(target=play_music,args=(self.parameters,))
         t.start()
         counter = 0
-        if self.parameters["option"] == "with_record":
+        mic_rms = [0,0]
+        if self.platform == "respeaker v2":
             time.sleep(3)
             
             with recorder.recorder(16000, 8, 16000 / 16)  as mic:
@@ -54,17 +55,25 @@ class subcore(core.interface):
                         data = np.fromstring(chunk, dtype='int16')
                         data = data[6+i::8].tostring()
                         rms = audioop.rms(data, 2)
-                        rms_db = 20 * np.log10(rms)
-                        print('channel: {} RMS: {} dB'.format(6+i,rms_db))
-                        if i == 0:
-                            if self.parameters["ch7"] - self.parameters["bias"] > rms_db  \
-                            and self.parameters["ch7"] + self.parameters["bias"] < rms_db:
-                                self.ret["result"] = "failed"  
-                        if i == 1:
-                            if self.parameters["ch8"] - self.parameters["bias"] > rms_db  \
-                            and self.parameters["ch8"] + self.parameters["bias"] < rms_db:
-                                self.ret["result"] = "failed"                                                                
-                    if counter == 10:
+                        #rms_db = 20 * np.log10(rms)      
+                        #print('channel: {} RMS: {} dB'.format(6+i,rms))
+                        if counter != 0:
+                            mic_rms[i] = mic_rms[i] + rms                        
+                                                             
+                    if counter == 20:
                         break
-                    counter = counter + 1        
+                    counter = counter + 1     
+        for i in range(2):
+            mic_rms[i] = mic_rms[i] / 20
+            print('channel: {} RMS: {} dB'.format(i,mic_rms[i]))   
+            if i == 0:
+                if self.parameters["ch7"] - self.parameters["bias"] > mic_rms[i]  \
+                or self.parameters["ch7"] + self.parameters["bias"] < mic_rms[i]:
+                    self.ret["result"] = "failed"  
+                    break
+            if i == 1:
+                if self.parameters["ch8"] - self.parameters["bias"] > mic_rms[i]  \
+                or self.parameters["ch8"] + self.parameters["bias"] < mic_rms[i]:
+                    self.ret["result"] = "failed"
+                    break               
         return self.ret
