@@ -45,35 +45,50 @@ class subcore(core.interface):
         t =threading.Thread(target=play_music,args=(self.parameters,))
         t.start()
         counter = 0
-        mic_rms = [0,0]
+        mic_rms = [0,0,0,0,0,0,0,0]
+        all_rms = 0
         if self.platform == "respeaker v2":
             time.sleep(3)
             
             with recorder.recorder(16000, 8, 16000 / 16)  as mic:
                 for chunk in mic.read_chunks():
-                    for i in range(2):
+                    for i in range(8):
                         data = np.fromstring(chunk, dtype='int16')
-                        data = data[6+i::8].tostring()
+                        data = data[i::8].tostring()
                         rms = audioop.rms(data, 2)
                         #rms_db = 20 * np.log10(rms)      
                         #print('channel: {} RMS: {} dB'.format(6+i,rms))
                         if counter != 0:
                             mic_rms[i] = mic_rms[i] + rms                        
                                                              
-                    if counter == 20:
+                    if counter == 30:
                         break
                     counter = counter + 1     
-        for i in range(2):
-            mic_rms[i] = mic_rms[i] / 20
-            print('channel: {} RMS: {} dB'.format(i,mic_rms[i]))   
-            if i == 0:
-                if self.parameters["ch7"] - self.parameters["bias"] > mic_rms[i]  \
-                or self.parameters["ch7"] + self.parameters["bias"] < mic_rms[i]:
-                    self.ret["result"] = "failed"  
+        for i in range(8):
+            mic_rms[i] = mic_rms[i] / 30
+            print('channel: {} RMS: {} dB'.format(i,mic_rms[i]))                           
+            if i == 6:
+                if self.parameters["ch7"] - self.parameters["bias_c"] > mic_rms[i]  \
+                or self.parameters["ch7"] + self.parameters["bias_c"] < mic_rms[i]:
+                    self.ret["result"] = "ch7"  
                     break
-            if i == 1:
-                if self.parameters["ch8"] - self.parameters["bias"] > mic_rms[i]  \
-                or self.parameters["ch8"] + self.parameters["bias"] < mic_rms[i]:
-                    self.ret["result"] = "failed"
-                    break               
+            if i == 7:
+                if self.parameters["ch8"] - self.parameters["bias_c"] > mic_rms[i]  \
+                or self.parameters["ch8"] + self.parameters["bias_c"] < mic_rms[i]:
+                    self.ret["result"] = "ch8"
+                    break    
+        variance =  np.std(mic_rms[0:6])
+        print("====方差=====:{}".format(variance))
+        if self.parameters["variance"] - self.parameters["bias_v"] > variance  \
+        or self.parameters["variance"] + self.parameters["bias_v"] < variance:
+            self.ret["result"] = "var"
+
+        for i in range(6):
+            all_rms = all_rms + mic_rms[i]
+        average = all_rms/6
+        print("====平均值=====:{}".format(average)) 
+        if self.parameters["average"] - self.parameters["bias_a"] > average  \
+        or self.parameters["average"] + self.parameters["bias_a"] < average:
+            self.ret["result"] = "ave"
+
         return self.ret

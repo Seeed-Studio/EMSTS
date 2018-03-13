@@ -70,10 +70,15 @@
     "status": "okay",
     "thread": "okay",
     "device": "plughw:0,1",
-    "music": "white.wav",
+    "music": "white.wav",        
     "ch7": 237,
     "ch8": 294,
-    "bias": 2,
+    "variance": 420,
+    "average":2934,
+    "bias": 5,
+    "bias_v": 30,
+    "bias_a": 150,
+    "bias_c": 5,
     "file": "aplay_player"        
     },   
    "wifi": {
