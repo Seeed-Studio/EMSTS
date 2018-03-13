@@ -42,6 +42,8 @@ class subcore(core.interface):
             "result": "ok"
         }
     def do_test(self):
+        if self.platform == "respeaker v2":
+            os.system("arecord -d 1 -f S16_LE -r 16000 -Dhw:0,0 -c 8 /tmp/aaa.wav")
         t =threading.Thread(target=play_music,args=(self.parameters,))
         t.start()
         counter = 0

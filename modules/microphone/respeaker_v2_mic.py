@@ -49,7 +49,9 @@ class subcore(core.interface):
         for event in self.key.read_loop():
             if event.type == ecodes.EV_KEY:
                 if categorize(event).keystate == 2:
-                    time.sleep(2)
+                    time.sleep(4)
+                    if self.platform == "respeaker v2":
+                        os.system("arecord -d 1 -f S16_LE -r 16000 -Dhw:0,0 -c 8 /tmp/aaa.wav")
                     with recorder.recorder(16000, 8, 16000 / 16)  as mic:
                         for chunk in mic.read_chunks():
                             for i in range(6):
