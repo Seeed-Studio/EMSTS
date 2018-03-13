@@ -40,3 +40,7 @@ pip3 install evdev
 ```
 apt install python3-pexpect
 ```
+### modules->uart
+```
+pip3 install pyserial
+```
