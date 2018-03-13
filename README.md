@@ -1,8 +1,12 @@
-## EMSTS(embedded system test software)
+# EMSTS(embedded system test software)
+
+## RUN
 ```
 sudo su
 apt update
-apt install python3-pip python3-mraa  python3-upm python3-dev 
+apt install python3-pip python3-mraa  python3-upm python3-dev
+cd EMSTS
+./start
 ```
 ### lib->display:
 ```
