@@ -27,6 +27,10 @@ import threading
 from lib import recorder
 import numpy as np
 import audioop
+import pyaudio
+import wave
+
+
 def play_music(p):
     os.popen(" aplay -D " +p["device"] +" /opt/music/"+p["music"])
 
@@ -49,26 +53,35 @@ class subcore(core.interface):
         counter = 0
         mic_rms = [0,0,0,0,0,0,0,0]
         all_rms = 0
+        rms = 0
+        RATE = 16000
+        CHUNK = 2048
+        RECORD_SECONDS = 5
         if self.platform == "respeaker v2":
             time.sleep(3)
+
+            os.system("arecord -d 7 -f S16_LE -r 16000 -Dhw:0,0 -c 8 /tmp/bbb.wav")
             
-            with recorder.recorder(16000, 8, 16000 / 16)  as mic:
-                for chunk in mic.read_chunks():
-                    for i in range(8):
-                        data = np.fromstring(chunk, dtype='int16')
-                        data = data[i::8].tostring()
-                        rms = audioop.rms(data, 2)
-                        #rms_db = 20 * np.log10(rms)      
-                        #print('channel: {} RMS: {} dB'.format(6+i,rms))
-                        if counter != 0:
-                            mic_rms[i] = mic_rms[i] + rms                        
+            wf = wave.open("/tmp/bbb.wav","rb")
+
+            chunk = wf.readframes(CHUNK)
+            while chunk != b'':
+                for ii in range(8):
+                    data = np.fromstring(chunk, dtype='int16')
+                    data = data[ii::8].tostring()
+                    rms = audioop.rms(data, 2)
+                    #rms_db = 20 * np.log10(rms)
+                    #print('channel: {} RMS: {} dB'.format(ii,rms_db))
+                    if counter > 19:
+                        mic_rms[ii] = mic_rms[ii] + rms                        
                                                              
-                    if counter == 30:
-                        break
-                    counter = counter + 1     
+                if counter == 50:
+                    break
+                counter = counter + 1   
+                chunk = wf.readframes(CHUNK)
         for i in range(8):
             mic_rms[i] = mic_rms[i] / 30
-            print('channel: {} RMS: {} dB'.format(i,mic_rms[i]))                           
+            print('channel: {} RMS: {}'.format(i,mic_rms[i]))                           
             if i == 6:
                 if self.parameters["ch7"] - self.parameters["bias_c"] > mic_rms[i]  \
                 or self.parameters["ch7"] + self.parameters["bias_c"] < mic_rms[i]:
@@ -78,19 +91,10 @@ class subcore(core.interface):
                 if self.parameters["ch8"] - self.parameters["bias_c"] > mic_rms[i]  \
                 or self.parameters["ch8"] + self.parameters["bias_c"] < mic_rms[i]:
                     self.ret["result"] = "ch8"
-                    break    
-        variance =  np.std(mic_rms[0:6])
-        print("====方差=====:{}".format(variance))
-        if self.parameters["variance"] - self.parameters["bias_v"] > variance  \
-        or self.parameters["variance"] + self.parameters["bias_v"] < variance:
-            self.ret["result"] = "var"
+                    break
 
-        for i in range(6):
-            all_rms = all_rms + mic_rms[i]
-        average = all_rms/6
-        print("====平均值=====:{}".format(average)) 
-        if self.parameters["average"] - self.parameters["bias_a"] > average  \
-        or self.parameters["average"] + self.parameters["bias_a"] < average:
-            self.ret["result"] = "ave"
-
+            if i != 6 and i != 7:
+                if mic_rms[i] < self.parameters["mini"] :
+                    self.ret["result"] = str(i)
+                    break                
         return self.ret
