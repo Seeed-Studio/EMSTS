@@ -60,7 +60,10 @@ if __name__ == "__main__":
                     ii.join()               
                 break
 
-
+    for t in ts:
+        while t.is_alive():
+            time.sleep(1)
+            
     console.finish()
     while True:
         time.sleep(1)
