@@ -1,4 +1,4 @@
-#！/bin/sh
+#!/bin/sh
 
 export SDL_NOMOUSE=1
 
