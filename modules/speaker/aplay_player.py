@@ -25,15 +25,23 @@ import time
 import os
 import threading
 from lib import recorder
+from lib.snowboy import snowboydecoder
 import numpy as np
 import audioop
-import pyaudio
+from dtw import dtw
+from numpy.linalg import norm
+from python_speech_features import mfcc
+from python_speech_features import logfbank
 import wave
-
 
 def play_music(p):
     os.popen(" aplay -D " +p["device"] +" /opt/music/"+p["music"])
 
+def mic_array_arecord(p):
+    os.popen("arecord -D hw:seeed8micvoicec -r 16000 -c 8 -f  S16_LE -d 2 /tmp/mic_array.wav")
+
+def usb_audio_arecord(p):
+    os.popen("arecord -D hw:ArrayUAC10 -r 16000 -c 6 -f  S16_LE -d 2 /tmp/usb_audio.wav ")
 
 class subcore(core.interface):
     def __init__(self,parameters,platform,debug):
@@ -47,54 +55,114 @@ class subcore(core.interface):
         }
     def do_test(self):
         if self.platform == "respeaker v2":
+            sensitivity = 0.5
+            CHUNK=1024
+            mic_rms = [0,0,0,0,0,0,0,0]
+            counter = 0
             os.system("arecord -d 1 -f S16_LE -r 16000 -Dhw:0,0 -c 8 /tmp/aaa.wav")
-        t =threading.Thread(target=play_music,args=(self.parameters,))
-        t.start()
-        counter = 0
-        mic_rms = [0,0,0,0,0,0,0,0]
-        all_rms = 0
-        rms = 0
-        RATE = 16000
-        CHUNK = 2048
-        RECORD_SECONDS = 5
-        if self.platform == "respeaker v2":
-            time.sleep(3)
-
-            os.system("arecord -d 7 -f S16_LE -r 16000 -Dhw:0,0 -c 8 /tmp/bbb.wav")
             
-            wf = wave.open("/tmp/bbb.wav","rb")
 
-            chunk = wf.readframes(CHUNK)
+            play_thread =threading.Thread(target=play_music,args=(self.parameters,))
+            play_thread.start()
+
+            mic_array_thread =threading.Thread(target=mic_array_arecord,args=(self.parameters,))
+            mic_array_thread.start()
+
+            usb_audio_thread =threading.Thread(target=usb_audio_arecord,args=(self.parameters,))
+            usb_audio_thread.start()
+
+
+            time.sleep(3)
+            #1, 先用参考麦克风用snowboy先对环境进行测试如果不合适，重新录音
+            
+           
+            usb_audio_wave = wave.open("/tmp/usb_audio.wav","rb")
+            
+            chunk1 = usb_audio_wave.readframes(usb_audio_wave.getnframes())        
+            data1 = np.fromstring(chunk1, dtype='int16')
+            detection = snowboydecoder.HotwordDetector("/home/respeaker/respeaker_v2_f/lib/snowboy/resources/models/snowboy.umdl", sensitivity=sensitivity)
+            ans = detection.detector.RunDetection(np.array(data1[4::6], dtype=np.int16).tobytes())
+            if ans == 1:
+                print('Hotword Detected!')
+            else:
+                print('usb not hotword Detected!')
+                #播放警告信息
+                os.popen(" aplay -D " +self.parameters["device"] +" /opt/music/warning.wav")
+                time.sleep(2)
+                #环境不合适重新录音
+                play_thread =threading.Thread(target=play_music,args=(self.parameters,))
+                play_thread.start()
+                mic_array_thread =threading.Thread(target=mic_array_arecord,args=(self.parameters,))
+                mic_array_thread.start()
+                time.sleep(3)
+            usb_audio_wave.close()
+
+            mic_array_wave = wave.open("/tmp/mic_array.wav","rb")
+            chunk2 = mic_array_wave.readframes(mic_array_wave.getnframes())  
+            data2 = np.fromstring(chunk2, dtype='int16')           
+            #2，用snowboy对每个通道进行关键词检测
+            for i in range(6):
+                ans = detection.detector.RunDetection(np.array(data2[i::8], dtype=np.int16).tobytes())
+                if ans == 1:
+                    print('Hotword Detected!')
+                else:
+                    self.ret["result"] = str(i)
+                    break
+            mic_array_wave.close()
+
+            #3，以1024的窗口对1-6通道进行rms测试，通道的最大值和最小值之差一定要合理的范围以内
+            mic_array_rms = wave.open("/tmp/mic_array.wav","rb")
+
+            chunk = mic_array_rms.readframes(CHUNK)
+
             while chunk != b'':
+                min_rms = {"ch":0,"val":999999999}
+                max_rms = {"ch":0,"val":0} 
+                avg_val = 0            
                 for ii in range(8):
                     data = np.fromstring(chunk, dtype='int16')
                     data = data[ii::8].tostring()
                     rms = audioop.rms(data, 2)
-                    #rms_db = 20 * np.log10(rms)
-                    #print('channel: {} RMS: {} dB'.format(ii,rms_db))
-                    if counter > 19:
-                        mic_rms[ii] = mic_rms[ii] + rms                        
-                                                             
-                if counter == 50:
-                    break
-                counter = counter + 1   
-                chunk = wf.readframes(CHUNK)
-        for i in range(8):
-            mic_rms[i] = mic_rms[i] / 30
-            print('channel: {} RMS: {}'.format(i,mic_rms[i]))                           
-            if i == 6:
-                if self.parameters["ch7"] - self.parameters["bias_c"] > mic_rms[i]  \
-                or self.parameters["ch7"] + self.parameters["bias_c"] < mic_rms[i]:
-                    self.ret["result"] = "ch7"  
-                    break
-            if i == 7:
-                if self.parameters["ch8"] - self.parameters["bias_c"] > mic_rms[i]  \
-                or self.parameters["ch8"] + self.parameters["bias_c"] < mic_rms[i]:
-                    self.ret["result"] = "ch8"
-                    break
+                    #最大最小值忽略7,8通道
+                    if ii < 6:
+                        avg_val +=rms
+                        #print('channel: {} RMS: {}'.format(ii,rms)) 
+                        if min_rms["val"] > rms:
+                            min_rms["val"] = rms
+                            min_rms["ch"] = ii
+                        if max_rms["val"] < rms:
+                            max_rms["val"] = rms
+                            max_rms["ch"] = ii
+                    else:
+                    #7,8通道统计rms
+                        mic_rms[i] = mic_rms[i] + rms
+                        counter = counter + 1
+                        
+                avg_val = avg_val/ii
+                #4, rms是对静噪的测试，所以只考虑麦克风能力值平均值在1000以内的窗
+                if avg_val < 1000:
+                    if max_rms["val"]-min_rms["val"] > self.parameters["min"]:
+                        self.ret["result"]="ch"+str(max_rms["ch"])+", ch"+str(min_rms["ch"])
+                        break
 
-            if i != 6 and i != 7:
-                if mic_rms[i] < self.parameters["mini"] :
-                    self.ret["result"] = str(i)
-                    break                
+                chunk = mic_array_rms.readframes(CHUNK)
+
+            #如果1-6通道测试失败，直接返回，不进行下面的测试
+            if self.ret["result"] != "ok":
+                return self.ret
+
+            #第7,8通道
+            for i in range(2):
+                mic_rms[6+i] = mic_rms[6+i] / counter
+                print('channel: {} RMS: {}'.format(6+i,mic_rms[6+i]))                           
+                if i == 0:
+                    if self.parameters["ch7"] - self.parameters["bias_c"] > mic_rms[6+i]  \
+                    or self.parameters["ch7"] + self.parameters["bias_c"] < mic_rms[6+i]:
+                        self.ret["result"] = "ch7"  
+                        break
+                if i == 1:
+                    if self.parameters["ch8"] - self.parameters["bias_c"] > mic_rms[6+i]  \
+                    or self.parameters["ch8"] + self.parameters["bias_c"] < mic_rms[6+i]:
+                        self.ret["result"] = "ch8"
+                        break           
         return self.ret
