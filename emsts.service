@@ -1,0 +1,13 @@
+[Unit]
+Description=emsts-Service
+After=ssh.service
+
+[Service]
+Type=oneshot
+Userr=root
+Group=root
+WorkingDirectory=/root/emsts
+ExecStart=/root/emsts/start
+
+[Install]
+WantedBy=multi-user.target
