@@ -45,7 +45,7 @@
     "eth": {
         "description": "ethernet",
         "device": "eth0",
-        "ping_address": "192.168.199.1",
+        "ping_address": "192.168.4.2",
         "file": "general_eth",
         "status": "okay"
     },   
@@ -69,16 +69,12 @@
     "description": "sp",
     "status": "okay",
     "thread": "okay",
-    "device": "plughw:0,1",
-    "music": "white.wav",        
+    "device": "plughw:CARD=seeed8micvoicec,DEV=1",
+    "music": "snowboy.wav",        
     "ch7": 237,
-    "ch8": 294,
-    "variance": 420,
-    "average":2934,
-    "bias": 5,
-    "bias_v": 30,
-    "bias_a": 150,
-    "bias_c": 5,
+    "ch8": 300,
+    "bias_c": 10,
+    "min": 80,
     "file": "aplay_player"        
     },   
    "wifi": {
