@@ -1,0 +1,14 @@
+[Unit]
+Description=leds-test-Service
+After=ssh.service
+
+[Service]
+Type=oneshot
+Userr=root
+Group=root
+WorkingDirectory=/root/emsts
+ExecStart=/usr/bin/python3 /root/emsts/platform/respeaker_v2/leds_test.py
+
+[Install]
+WantedBy=multi-user.target
+
