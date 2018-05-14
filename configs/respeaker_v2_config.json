@@ -58,7 +58,7 @@
                 "id":"10c4:ea60"
             },
             {
-                "id":"0403:6001"
+                "id":"2886:0018"
             },
             {
                 "id":"0bda:8152"
@@ -71,10 +71,11 @@
     "thread": "okay",
     "device": "plughw:CARD=seeed8micvoicec,DEV=1",
     "music": "snowboy.wav",        
-    "ch7": 237,
-    "ch8": 300,
-    "bias_c": 10,
-    "min": 80,
+    "ch7": 85,
+    "ch8": 100,
+    "bias_c": 30,
+    "min": 250,
+    "min_rms": 0.5,
     "file": "aplay_player"        
     },   
    "wifi": {
