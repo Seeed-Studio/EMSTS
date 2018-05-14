@@ -1,10 +1,11 @@
+import time
 from evdev import InputDevice,categorize,ecodes
-from pixel_ring import pixel_ring
+from pixel_ring.apa102_pixel_ring import PixelRing
 import mraa
 import os
-import time
 
-time.sleep(5)
+pixel_ring = PixelRing()
+
 key = InputDevice("/dev/input/event0")
 en = mraa.Gpio(12)
 if os.geteuid() != 0 :
