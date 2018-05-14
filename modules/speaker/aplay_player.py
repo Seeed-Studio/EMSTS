@@ -180,6 +180,12 @@ class subcore(core.interface):
             if self.ret["result"] != "ok":
                 return self.ret
 
+            #如果板载麦克风都测不到5段安静的声音，播放警告语音退出
+            if min_rms_counter < 5:
+                os.popen(" aplay -D " +self.parameters["device"] +" /opt/music/warning1.wav")
+                self.ret["result"] = "failed"
+                return self.ret
+
             #整体麦克风的灵敏度要在一定范围以内
             avg_min_rms = avg_min_rms / min_rms_counter
             usb_and_mic = avg_min_rms - usb_avg_val
