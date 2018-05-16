@@ -102,7 +102,6 @@ class subcore(core.interface):
             usb_mic_array_rms = wave.open("/tmp/usb_audio.wav","rb")
             chunk = usb_mic_array_rms.readframes(CHUNK)
             usb_min_rms_counter = 0
-            usb_avg_val = 0  
             while chunk != b'':       
                 data = np.fromstring(chunk, dtype='int16')
                 data = data[4::8].tostring()
@@ -111,7 +110,6 @@ class subcore(core.interface):
                         
                 #rms是对静噪的测试，所以只考虑麦克风能量值平均值在600以内的窗
                 if rms < 350:
-                    usb_avg_val = usb_avg_val + rms
                     usb_min_rms_counter += 1
 
                 chunk = usb_mic_array_rms.readframes(CHUNK)
@@ -121,8 +119,6 @@ class subcore(core.interface):
                 os.popen(" aplay -D " +self.parameters["device"] +" /opt/music/warning1.wav")
                 self.ret["result"] = "failed"
                 return self.ret
-            else:
-                usb_avg_val = usb_avg_val / usb_min_rms_counter
             usb_mic_array_rms.close()
 
 
@@ -138,11 +134,22 @@ class subcore(core.interface):
                     self.ret["result"] = str(i)
                     break
             mic_array_wave.close()
+            #如果snowboy 对1-6通道测试失败，直接返回，不进行下面的测试
+            if self.ret["result"] != "ok":
+                return self.ret
+                
+            #录一段安静环境的声音
+            mic_array_thread =threading.Thread(target=mic_array_arecord,args=(self.parameters,))
+            mic_array_thread.start()
+            usb_audio_thread =threading.Thread(target=usb_audio_arecord,args=(self.parameters,))
+            usb_audio_thread.start()
+            time.sleep(3)
 
             #3，以1024的窗口对1-6通道进行rms测试，通道的最大值和最小值之差一定要合理的范围以内
             mic_array_rms = wave.open("/tmp/mic_array.wav","rb")
 
             chunk = mic_array_rms.readframes(CHUNK)
+            skip_starter = 0
 
             while chunk != b'':
                 min_rms = {"ch":99,"val":999999999}
@@ -163,11 +170,12 @@ class subcore(core.interface):
                         max_rms["ch"] = ii
                        
                 avg_val = avg_val/ii
+                skip_starter += 1
                 #4, rms是对静噪的测试，所以只考虑麦克风能力值平均值在600以内的窗
-                if avg_val < 600:
+                if avg_val < 600 and skip_starter > 2:
                     print('max:',max_rms)                           
                     print('min:',min_rms)                           
-                    if max_rms["val"]-min_rms["val"] > self.parameters["min"]:
+                    if min_rms["val"]/max_rms["val"] < self.parameters["min"]:
                         self.ret["result"]="ch"+str(max_rms["ch"])+", ch"+str(min_rms["ch"])
                         break
                     avg_min_rms += min_rms["val"]
@@ -179,20 +187,29 @@ class subcore(core.interface):
             #如果1-6通道测试失败，直接返回，不进行下面的测试
             if self.ret["result"] != "ok":
                 return self.ret
-
-            #如果板载麦克风都测不到5段安静的声音，播放警告语音退出
             if min_rms_counter < 5:
                 os.popen(" aplay -D " +self.parameters["device"] +" /opt/music/warning1.wav")
-                self.ret["result"] = "failed"
+                self.ret["result"] = "all error"
                 return self.ret
 
-            #整体麦克风的灵敏度要在一定范围以内
-            avg_min_rms = avg_min_rms / min_rms_counter
-            usb_and_mic = avg_min_rms - usb_avg_val
-            print("min_rms: ",usb_and_mic)
-            if usb_and_mic  < avg_min_rm*self.parameters["min_rms"]:
-                self.ret["result"] = "all error"
-                return self.ret 
+            #重新打开usb_audio的wav文件，检测安静环境的灵敏度，用来对比麦克风整体静噪
+            usb_mic_array_rms = wave.open("/tmp/usb_audio.wav","rb")
+            chunk = usb_mic_array_rms.readframes(CHUNK)
+            usb_min_rms_counter = 0
+            usb_avg_val = 0
+            while chunk != b'':       
+                data = np.fromstring(chunk, dtype='int16')
+                data = data[4::8].tostring()
+                rms = audioop.rms(data, 2)
+
+                        
+                #rms是对静噪的测试，所以只考虑麦克风能量值平均值在350以内的窗
+                if rms < 350:
+                    usb_avg_val += rms 
+                    usb_min_rms_counter += 1
+
+                chunk = usb_mic_array_rms.readframes(CHUNK)
+            usb_mic_array_rms.close()
 
 
             #使用白噪声测试第7,8通道
@@ -232,5 +249,19 @@ class subcore(core.interface):
                     if self.parameters["ch8"] - self.parameters["bias_c"] > mic_rms[i]  \
                     or self.parameters["ch8"] + self.parameters["bias_c"] < mic_rms[i]:
                         self.ret["result"] = "ch8"
-                        break           
+                        break   
+            mic_array_rms.close()
+
+
+
+            #整体麦克风的灵敏度要在一定范围以内
+            usb_avg_val = usb_avg_val / usb_min_rms_counter
+            avg_min_rms = avg_min_rms / min_rms_counter
+            usb_and_mic = avg_min_rms - usb_avg_val
+            print("mic - usb: ",usb_and_mic)
+            print("You seting min_rms:",usb_avg_val*self.parameters["min_rms"])
+            if usb_and_mic  < usb_avg_val*self.parameters["min_rms"]:
+                self.ret["result"] = "all error"
+                return self.ret 
+       
         return self.ret
