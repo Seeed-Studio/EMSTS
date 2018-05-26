@@ -8,7 +8,8 @@ pixel_ring = PixelRing()
 
 key = InputDevice("/dev/input/event0")
 en = mraa.Gpio(12)
-if os.geteuid() != 0 :
+
+while os.geteuid() != 0 :
     time.sleep(1)
 
 en.dir(mraa.DIR_OUT)
@@ -20,4 +21,5 @@ for event in key.read_loop():
             for ii in range(12):
                 leds.set_pixel(ii, 125, 125, 125)   
                 leds.show() 
+
 
