@@ -71,7 +71,7 @@ class subcore(core.interface):
 
             play_thread =threading.Thread(target=play_music,args=(self.parameters,))
             play_thread.start()
-
+            time.sleep(1)
             mic_array_thread =threading.Thread(target=mic_array_arecord,args=(self.parameters,))
             mic_array_thread.start()
 
@@ -215,7 +215,7 @@ class subcore(core.interface):
             #使用白噪声测试第7,8通道
             play_thread =threading.Thread(target=play_white,args=(self.parameters,))
             play_thread.start()      
-            time.sleep(1)
+            time.sleep(2)
             mic_array_thread =threading.Thread(target=mic_array_arecord,args=(self.parameters,))
             mic_array_thread.start()
             time.sleep(3)
