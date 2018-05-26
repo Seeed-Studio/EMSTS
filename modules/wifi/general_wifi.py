@@ -34,7 +34,10 @@ class subcore(core.interface):
             "result": "failed"
         }
     def do_test(self):
-        wifis =  os.popen('sudo iw '+ self.parameters["device"]+ ' scan | grep "SSID: "').readlines()
+        os.system('sudo iw '+ self.parameters["device"]+ ' scan > /tmp/wifi.log')
+        time.sleep(1)
+        os.system('sudo iw '+ self.parameters["device"]+ ' scan >> /tmp/wifi.log')
+        wifis =  os.popen('cat /tmp/wifi.log | grep "SSID: "').readlines()
         if len(wifis) != 0 :
             self.ret["result"] = "ok"
         return self.ret
