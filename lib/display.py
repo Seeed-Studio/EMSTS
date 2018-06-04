@@ -112,6 +112,7 @@ class display(threading.Thread):
             #len("watch") = 5
             self.print_str(str_line["result"],self.WHITE,50,320 - 20 - 16*5,20 + self.text_index*35)
         self.text_index = self.text_index + 1
+        self.show()
 
     #very char use 15bit    
     def print_str(self,str,color,f_size,x,y):
