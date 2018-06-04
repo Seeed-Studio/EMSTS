@@ -108,7 +108,7 @@ class Bluetoothctl:
         return status
     def run_scan_test(self):
         self.child.sendline("scan on")
-        time.sleep(1)
+        time.sleep(2)
         results = self.child.expect(["[NEW]", pexpect.EOF,pexpect.TIMEOUT], timeout=10)
         #print("scan on result: "+str(results) ) 
         return results  
