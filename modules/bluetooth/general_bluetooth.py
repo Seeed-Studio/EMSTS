@@ -45,8 +45,11 @@ class subcore(core.interface):
         self.bt = bt.Bluetoothctl()
     def do_test(self):
         if self.parameters["mathed"] == "scan":
-            if self.bt.run_scan_test() == 0:
-                self.ret["result"] = "ok"
+            try:
+                if self.bt.run_scan_test() == 0:
+                    self.ret["result"] = "ok"
+            except :
+                self.ret["result"] = "failed"
         return self.ret
 
 

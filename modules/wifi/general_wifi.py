@@ -34,9 +34,13 @@ class subcore(core.interface):
             "result": "failed"
         }
     def do_test(self):
-        os.system('sudo iw '+ self.parameters["device"]+ ' scan > /tmp/wifi.log')
-        time.sleep(1)
-        os.system('sudo iw '+ self.parameters["device"]+ ' scan >> /tmp/wifi.log')
+        try:
+            os.system('sudo iw '+ self.parameters["device"]+ ' scan > /tmp/wifi.log')
+            time.sleep(1)
+            os.system('sudo iw '+ self.parameters["device"]+ ' scan >> /tmp/wifi.log')
+        except :
+            os.system('touch /tmp/wifi.log')
+            
         wifis =  os.popen('cat /tmp/wifi.log | grep "SSID: "').readlines()
         if len(wifis) != 0 :
             self.ret["result"] = "ok"
