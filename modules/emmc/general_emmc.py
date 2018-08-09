@@ -34,8 +34,12 @@ class subcore(core.interface):
             "result": "failed"
         }
     def do_test(self):
-        nr_sectors = open('/sys/block/'+self.parameters["location"]+'/size').read().rstrip('\n')
-        sect_size = open('/sys/block/'+self.parameters["location"]+'/queue/hw_sector_size').read().rstrip('\n')
+        try:
+            nr_sectors = open('/sys/block/'+self.parameters["location"]+'/size').read().rstrip('\n')
+            sect_size = open('/sys/block/'+self.parameters["location"]+'/queue/hw_sector_size').read().rstrip('\n')
+        except :
+            self.ret["result"] = "failed"
+
         real_size =  float(nr_sectors)*float(sect_size)/(1024.0*1024.0*1024.0)
 
         if self.parameters["size"] - self.parameters["bias"] < real_size  \
